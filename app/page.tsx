@@ -1,33 +1,35 @@
 "use client";
-
+import { GoogleGenAI } from "@google/genai";
 import { useState } from "react";
 
 export default function Home() {
   const [niche, setNiche] = useState("");
   const [bio, setBio] = useState("");
 
-  const generateBio = () => {
-    if (!niche.trim()) {
-      setBio("Please enter an Instagram niche.");
-      return;
-    }
+  const ai = new GoogleGenAI({
+  apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!,
+});
+ const generateBio = async () => {
+  if (!niche.trim()) {
+    setBio("Please enter an Instagram niche.");
+    return;
+  }
 
-   const bios = [
-`✨ ${niche} Creator
-📸 Sharing tips & inspiration
-💖 Follow for daily content`,
+  try {
+   const response = await ai.models.generateContent({
+  model: "gemini-2.5-flash",
+  contents:
+    "Generate ONE creative Instagram bio for a " +
+    niche +
+    " creator. Maximum 150 characters. Use emojis. Return ONLY the bio. Do not add titles, options or explanations.",
+});
 
-`🌍 Exploring the world
-📷 ${niche} lover
-✨ New posts every week`,
-
-`🚀 Passionate about ${niche}
-🎯 Inspiring people every day
-❤️ Join the journey`
-];
-
-setBio(bios[Math.floor(Math.random() * bios.length)]);
-  };
+    setBio(response.text ?? "No bio generated.");
+  } catch (error) {
+    console.error(error);
+    setBio("Something went wrong. Please try again.");
+  }
+};
 
   const copyBio = () => {
     navigator.clipboard.writeText(bio);
